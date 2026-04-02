@@ -34,6 +34,9 @@ def load_db():
         st.stop()
 
 df=load_db()
+
+df['car_number'] = df['car_number'].astype(str).str.zfill(4)
+
 # =========================
 # OCR 초기화 (속도 개선)
 # =========================
@@ -92,10 +95,18 @@ elif mode == "📷 사진 업로드":
 # 결과 출력
 # =========================
 if car_number:
-    if car_number in df['car_number'].astype(str).values:
-        result = df[df['car_number'].astype(str) == car_number]
+    df['car_number'] = df['car_number'].astype(str).str.zfill(4)
 
+    if car_number in df['car_number'].values:
+        result = df[df['car_number'] == car_number]
         st.success("✅ 직원 차량입니다")
-        st.dataframe(result, use_container_width=True)
+        st.dataframe(result)
+
     else:
-        st.error("❌ 비직원 차량입니다")
+        # ⭐ 차번호 없는 직원 있는지 확인
+        no_car_staff = df[df['car_number'].isna() | (df['car_number']=="")]
+
+        if len(no_car_staff) > 0:
+            st.warning("⚠️ 등록되지 않은 차량입니다 (직원 차량일 수 있음)")
+        else:
+            st.error("❌ 비직원 차량입니다")
