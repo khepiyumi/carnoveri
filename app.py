@@ -131,8 +131,10 @@ if car_number:
         st.success(f"### ✅ 등록 차량 확인: {search_target}")
         for _, row in result.iterrows():
             c1, c2 = st.columns(2)
-            c1.metric("성명", row['name'])
-            c2.metric("소속 부서", row['department'])
+            with c1:
+                st.markdown(f"성명:, {row['name']}")
+            with c2
+                st.markdonn(f"소속 부서:, {row['department']}")
     else:
         st.error(f"### ❌ 미등록 차량: {search_target}")
         st.write("방문객 안내 대상을 확인해 주세요.")
