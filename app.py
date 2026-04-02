@@ -36,9 +36,6 @@ def load_db():
 # 실행
 df = load_db()
 
-# 확인용 (디버깅)
-st.write("컬럼 목록:", df.columns.tolist())
-st.write("DB 값:", df['car_number'].tolist())
 
 df['car_number'] = df['car_number'].astype(str).str.strip().str.zfill(4)
 
