@@ -19,9 +19,8 @@ st.caption("순찰 직원용 차량 확인 시스템")
 @st.cache_data
 def load_db():
     try:
-        return pd.read_csv("car_db.csv")
-    
-        })
+        return pd.read_csv("car_db.csv")   
+      
 
 df = load_db()
 
