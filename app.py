@@ -133,7 +133,7 @@ if car_number:
             c1, c2 = st.columns(2)
             with c1:
                 st.markdown(f"성명:, {row['name']}")
-            with c2
+            with c2:
                 st.markdonn(f"소속 부서:, {row['department']}")
     else:
         st.error(f"### ❌ 미등록 차량: {search_target}")
