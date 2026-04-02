@@ -20,10 +20,7 @@ st.caption("순찰 직원용 차량 확인 시스템")
 def load_db():
     try:
         return pd.read_csv("car_db.csv")
-    except:
-        return pd.DataFrame({
-            "car_number": ["1234", "5678", "9012"],
-            "name": ["홍길동", "김철수", "이영희"]
+    
         })
 
 df = load_db()
