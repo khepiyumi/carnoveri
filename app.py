@@ -101,17 +101,10 @@ elif mode == "📷 사진 업로드":
 # =========================
 if car_number:
     car_number = str(car_number).strip().zfill(4)
-    df['car_number'] = df['car_number'].astype(str).str.zfill(4)
 
     if car_number in df['car_number'].values:
         result = df[df['car_number'] == car_number]
         st.success("✅ 직원 차량입니다")
         st.dataframe(result, use_container_width=True)
     else:
-        # ⭐ 차번호 없는 직원 있는지 확인
-        no_car_staff = df[df['car_number'].isna() | (df['car_number']=="")]
-
-        if len(no_car_staff) > 0:
-            st.warning("⚠️ 등록되지 않은 차량입니다 (직원 차량일 수 있음)")
-        else:
-            st.error("❌ 비직원 차량입니다")
+        st.error("❌ 비직원 차량입니다")
