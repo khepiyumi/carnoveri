@@ -11,6 +11,10 @@ import datetime
 # =========================
 # 모바일 대응: 페이지 폭을 전체 화면으로 설정
 st.set_page_config(page_title="차량판별 시스템", layout="wide")
+with st.sidebar:
+    st.header("⚙️ 설정")
+    if st.button("🏠 메인 화면으로 돌아가기"):
+        st.rerun()
 
 # CSS 스타일링 (모바일 최적화)
 st.markdown("""
