@@ -108,8 +108,7 @@ if car_number:
 
     # 오늘 날짜 기반 홀짝 판단
     today = datetime.datetime.now()
-    korea_time = now_utc+
-datetime.timedelta(hours=9)
+    korea_time = now_utc + datetime.timedelta(hours=9)
 
     today_day = korea_time.day
     is_date_even = (today.day % 2 == 0)
