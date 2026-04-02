@@ -77,31 +77,35 @@ with tab2:
     uploaded_file = st.file_uploader("번호판 촬영 또는 업로드", type=["jpg", "png", "jpeg"])
     
     if uploaded_file:
-        # 1. 이미지 로드 및 화면 표시
-        img = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), 1)
-        st.image(img, use_container_width=True, caption="업로드된 이미지")
+        # 이미지 읽기
+        img_array = np.frombuffer(uploaded_file.read(), np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         
-        # 2. 버튼 클릭 없이 바로 분석 시작
-        with st.spinner("이미지를 자동으로 분석 중입니다..."):
-            try:
-                results = reader.readtext(img)
-                detected_text = "".join([r[1] for r in results])
-                
-                # 숫자만 추출
-                numbers = re.findall(r'\d+', detected_text)
-                
-                if numbers:
-                    full_number = "".join(numbers)
-                    # 추출된 번호를 전역 변수 car_number에 할당 (분석 결과 섹션으로 넘어감)
-                    car_number = full_number[-4:] if len(full_number) >= 4 else full_number
-                    st.success(f"✅ 번호 인식 성공: {car_number}")
-                else:
-                    st.error("숫자를 인식하지 못했습니다. 번호판이 잘 보이게 다시 촬영해 주세요.")
+        if img is not None:
+            # --- [추가] 이미지 크기가 너무 크면 축소 (처리 속도 및 에러 방지) ---
+            height, width = img.shape[:2]
+            if width > 1000: # 가로가 1000px 넘으면 축소
+                ratio = 1000 / width
+                img = cv2.resize(img, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_AREA)
+
+            # 사진 작게 보여주기
+            st.image(img, width=200, caption="인식된 이미지")
+            
+            with st.spinner("이미지 분석 중..."):
+                try:
+                    # OCR 실행
+                    results = reader.readtext(img)
+                    detected_text = "".join([r[1] for r in results])
+                    numbers = re.findall(r'\d+', detected_text)
                     
-            except Exception as e:
-                st.error(f"이미지 분석 중 오류가 발생했습니다: {e}")
-                if st.button("다시 시도하기"):
-                    st.rerun()
+                    if numbers:
+                        full_number = "".join(numbers)
+                        car_number = full_number[-4:] if len(full_number) >= 4 else full_number
+                        st.toast(f"인식 성공: {car_number}")
+                    else:
+                        st.warning("번호를 찾지 못했습니다. 좀 더 가까이서 정면으로 찍어주세요.")
+                except Exception as e:
+                    st.error(f"분석 에러: {e}")
 
 # [탭 3] 이용 가이드
 with tab3:
