@@ -35,7 +35,7 @@ def load_db():
 
 df=load_db()
 
-df['car_number'] = df['car_number'].astype(str).str.zfill(4)
+df['car_number'] = df['car_number'].astype(str).str.strip().str.zfill(4)
 
 # =========================
 # OCR 초기화 (속도 개선)
@@ -100,8 +100,7 @@ if car_number:
     if car_number in df['car_number'].values:
         result = df[df['car_number'] == car_number]
         st.success("✅ 직원 차량입니다")
-        st.dataframe(result)
-
+        st.dataframe(result, use)container_width=True)
     else:
         # ⭐ 차번호 없는 직원 있는지 확인
         no_car_staff = df[df['car_number'].isna() | (df['car_number']=="")]
