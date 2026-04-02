@@ -75,19 +75,33 @@ with tab1:
 # [탭 2] 사진 인식
 with tab2:
     uploaded_file = st.file_uploader("번호판 촬영 또는 업로드", type=["jpg", "png", "jpeg"])
+    
     if uploaded_file:
+        # 1. 이미지 로드 및 화면 표시
         img = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), 1)
         st.image(img, use_container_width=True, caption="업로드된 이미지")
-        if st.button("번호 추출 및 분석", key="btn_ocr"):
-            with st.spinner("이미지 분석 중..."):
+        
+        # 2. 버튼 클릭 없이 바로 분석 시작
+        with st.spinner("이미지를 자동으로 분석 중입니다..."):
+            try:
                 results = reader.readtext(img)
                 detected_text = "".join([r[1] for r in results])
+                
+                # 숫자만 추출
                 numbers = re.findall(r'\d+', detected_text)
+                
                 if numbers:
                     full_number = "".join(numbers)
+                    # 추출된 번호를 전역 변수 car_number에 할당 (분석 결과 섹션으로 넘어감)
                     car_number = full_number[-4:] if len(full_number) >= 4 else full_number
+                    st.success(f"✅ 번호 인식 성공: {car_number}")
                 else:
-                    st.error("숫자를 인식하지 못했습니다. 다시 촬영해 주세요.")
+                    st.error("숫자를 인식하지 못했습니다. 번호판이 잘 보이게 다시 촬영해 주세요.")
+                    
+            except Exception as e:
+                st.error(f"이미지 분석 중 오류가 발생했습니다: {e}")
+                if st.button("다시 시도하기"):
+                    st.rerun()
 
 # [탭 3] 이용 가이드
 with tab3:
