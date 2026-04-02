@@ -19,12 +19,19 @@ st.caption("순찰 직원용 차량 확인 시스템")
 @st.cache_data
 def load_db():
     try:
-        return pd.read_csv("car_db.csv")   
-      
+        df = pd.read_csv("car_db.csv")
 
-df = load_db()
-finally
+        required_cols = ["car_number"]
+        for col in required_cols:
+            if col not in df.columns:
+                st.error(f"❌ '{col}' 컬럼이 CSV에 없습니다.")
+                st.stop()
 
+        return df
+
+    except Exception:
+        st.error("❌ car_db.csv 파일을 찾을 수 없습니다. GitHub에 업로드해주세요.")
+        st.stop()
 # =========================
 # OCR 초기화 (속도 개선)
 # =========================
