@@ -107,7 +107,7 @@ if car_number:
     result = df[df['car_number'] == search_target]
 
     # 오늘 날짜 기반 홀짝 판단
-    today = datetime.datetime.now()
+    now_utc = datetime.datetime.utcnow()
     korea_time = now_utc + datetime.timedelta(hours=9)
 
     today_day = korea_time.day
