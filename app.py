@@ -107,11 +107,14 @@ if car_number:
     result = df[df['car_number'] == search_target]
 
     # 오늘 날짜 기반 홀짝 판단
+   # 1. 현재 세계 표준시 가져오기
     now_utc = datetime.datetime.utcnow()
+    # 2. 한국 시간으로 변환 (UTC + 9시간)
     korea_time = now_utc + datetime.timedelta(hours=9)
 
+    # 3. 한국 시간의 날짜(day)를 기준으로 판별
     today_day = korea_time.day
-    is_date_even = (today.day % 2 == 0)
+    is_date_even = (today_day % 2 == 0)
     day_type_str = "짝수" if is_date_even else "홀수"
     
     # 차량 번호 끝자리 기반 홀짝 판단
