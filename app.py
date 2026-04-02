@@ -18,7 +18,9 @@ st.caption("순찰 직원용 차량 확인 시스템")
 # =========================
 @st.cache_data
 def load_db():
-      try:
+      @st.cache_data
+def load_db():
+    try:
         df = pd.read_csv("car_db.csv")
 
         required_cols = ["car_number"]
@@ -30,13 +32,15 @@ def load_db():
         return df
 
     except Exception:
-        st.error("❌ car_db.csv 파일을 찾을 수 없습니다. GitHub에 업로드해주세요.")
+        st.error("❌ car_db.csv 파일을 찾을 수 없습니다.")
         st.stop()
 
-df=load_db()
+# 실행
+df = load_db()
+
+# 확인용 (디버깅)
 st.write("컬럼 목록:", df.columns.tolist())
 st.write("DB 값:", df['car_number'].tolist())
-
 
 df['car_number'] = df['car_number'].astype(str).str.strip().str.zfill(4)
 
