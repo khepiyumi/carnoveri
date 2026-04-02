@@ -18,8 +18,7 @@ st.caption("순찰 직원용 차량 확인 시스템")
 # =========================
 @st.cache_data
 def load_db():
-      @st.cache_data
-    try:
+      try:
         df = pd.read_csv("car_db.csv")
 
         required_cols = ["car_number"]
