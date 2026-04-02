@@ -17,6 +17,7 @@ st.caption("순찰 직원용 차량 확인 시스템")
 # DB 로드
 # =========================
 @st.cache_data
+
 def load_db():
     try:
         df = pd.read_csv("car_db.csv")
@@ -26,7 +27,7 @@ def load_db():
             if col not in df.columns:
                 st.error(f"❌ '{col}' 컬럼이 CSV에 없습니다.")
                 st.stop()
-
+df = load_db()
         return df
 
     except Exception:
