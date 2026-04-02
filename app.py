@@ -23,6 +23,7 @@ def load_db():
       
 
 df = load_db()
+finally
 
 # =========================
 # OCR 초기화 (속도 개선)
