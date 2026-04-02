@@ -139,7 +139,7 @@ if car_number:
 
     # [2] 홀짝제 점검 섹션
     st.markdown("### 📅 홀짝제(2부제) 결과")
-    st.write(f"오늘은 **{today.month}월 {today.day}일({day_type_str}날)** 입니다.")
+    st.write(f"오늘은 **{korea_time.month}월 {korea_time.day}일({day_type_str}날)** 입니다.")
     
     if is_violation:
         st.warning(f"🚨 **[운행 위반]** 오늘은 {day_type_str} 운행일입니다. (차량 끝자리: {last_digit})")
