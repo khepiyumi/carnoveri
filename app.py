@@ -18,6 +18,8 @@ st.caption("순찰 직원용 차량 확인 시스템")
 # =========================
 @st.cache_data
 def load_db():
+st.write("컬럼 목록:", df.columns.tolist())
+st.write("DB 값:", df['car_number'].tolist())
     try:
         df = pd.read_csv("car_db.csv")
 
