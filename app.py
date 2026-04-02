@@ -95,6 +95,7 @@ elif mode == "📷 사진 업로드":
 # 결과 출력
 # =========================
 if car_number:
+    car_number = str(car_number).strip().zfill(4)
     df['car_number'] = df['car_number'].astype(str).str.zfill(4)
 
     if car_number in df['car_number'].values:
