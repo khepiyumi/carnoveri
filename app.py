@@ -11,6 +11,19 @@ import datetime
 # =========================
 # 모바일 대응: 페이지 폭을 전체 화면으로 설정
 st.set_page_config(page_title="차량판별 시스템", layout="wide")
+st.error("### 📢 시스템 업데이트 안내") 
+st.markdown("""
+본 시스템이 **더 빠르고 안정적인 최신 버전(kheapicar)**으로 업데이트되었습니다.  
+기록 저장, 엑셀 다운로드, 자동 사진 인식 기능이 추가된 아래 링크를 이용해 주세요.
+""")
+
+# 새로운 앱의 실제 주소(URL)로 수정하세요
+new_app_url = "https://kheapicar.streamlit.app" 
+
+# 버튼 클릭 시 새 창으로 이동
+st.link_button("🚀 최신 버전(kheapicar)으로 이동하기", new_app_url, type="primary", use_container_width=True)
+
+st.divider() # 기존 내용과 분리하는 선
 with st.sidebar:
     st.header("⚙️ 설정")
     if st.button("🏠 메인 화면으로 돌아가기"):
