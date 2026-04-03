@@ -14,11 +14,11 @@ st.set_page_config(page_title="차량판별 시스템", layout="wide")
 
 st.error("### 📢 시스템 업데이트 안내") 
 st.markdown("""
-본 시스템이 **더 빠르고 안정적인 최신 버전(kheapicar)**으로 업데이트되었습니다.  
+본 시스템이 **더 빠르고 안정적인 최신 버전(khepicar)**으로 업데이트되었습니다.  
 기록 저장, 엑셀 다운로드, 자동 사진 인식 기능이 추가된 아래 링크를 이용해 주세요.
 """)
 
-new_app_url = "https://kheapicar.streamlit.app" 
+new_app_url = "https://khepicar.streamlit.app" 
 
 # 버튼 클릭 시 새 창으로 이동
 st.link_button("🚀 최신 버전(kheapicar)으로 이동하기", new_app_url, type="primary", use_container_width=True)
