@@ -114,49 +114,74 @@ st.markdown('<p class="main-title">🚗 KHEPI 차량 2부제 점검 시스템</p
 tab1, tab2, tab3 = st.tabs(["🔍 차량 조회/인식", "📊 점검 누적 목록", "📖 이용 가이드"])
 
 with tab1:
-    mode = st.radio("입력 모드 선택", ["개별 확인", "일괄 확인 (여러 대)"], horizontal=True)
-    
-    if mode == "개별 확인":
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("⌨️ 직접 입력")
-            input_num = st.text_input("번호 뒤 4자리 입력", max_chars=4)
-            if st.button("단일 조회"):
+    # 1단계: 개별 확인 vs 일괄 확인 선택
+    main_mode = st.radio("🏠 점검 방식을 선택하세요", ["🔍 개별 확인", "📑 일괄 확인 (여러 대)"], horizontal=True)
+    st.markdown("---")
+
+    if main_mode == "🔍 개별 확인":
+        # 2단계: 개별 확인 하단의 3가지 입력 모드
+        sub_mode = st.radio(
+            "입력 수단", 
+            ["⌨️ 직접 입력", "📁 사진 파일 인식", "📷 실시간 카메라 촬영"], 
+            horizontal=True
+        )
+        
+        st.write("") # 간격 조절
+
+        # --- 세부 모드별 로직 ---
+        if sub_mode == "⌨️ 직접 입력":
+            input_num = st.text_input("차량 번호 뒤 4자리 입력", max_chars=4, placeholder="예: 1234")
+            if st.button("번호 조회"):
                 st.session_state.current_car = input_num.strip().zfill(4)
 
-        with col2:
-            st.subheader("📷 사진 인식")
-            up_file = st.file_uploader("사진 업로드", type=["jpg", "png", "jpeg"], key="single")
+        elif sub_mode == "📁 사진 파일 인식":
+            up_file = st.file_uploader("이미지 파일 업로드", type=["jpg", "png", "jpeg"], key="single_upload")
             if up_file:
-                # ✅ 과부하 방지: 파일 ID 체크
-                file_id = f"{up_file.name}_{up_file.size}"
+                file_id = f"up_{up_file.name}_{up_file.size}"
                 if st.session_state.get('last_single_file') != file_id:
-                    with st.spinner("🚀 자동으로 번호를 추출하는 중..."):
+                    with st.spinner("이미지 분석 중..."):
                         file_bytes = np.frombuffer(up_file.read(), np.uint8)
                         img_raw = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
                         img_ocr = resize_image(img_raw, 600)
-                        # ✅ 성능 최적화: detail=0
                         results = reader.readtext(img_ocr, detail=0)
                         nums = re.findall(r'\d{4}', "".join(results))
-                        
                         if nums:
                             st.session_state.current_car = nums[-1]
                             st.session_state["last_single_file"] = file_id
-                            st.toast(f"추출 성공: {st.session_state.current_car}")
-                
-                st.image(resize_image(cv2.imdecode(np.frombuffer(up_file.getvalue(), np.uint8), cv2.IMREAD_COLOR), 300), 
-                         caption="업로드된 이미지", channels="BGR", use_container_width=False)
+                st.image(resize_image(cv2.imdecode(np.frombuffer(up_file.getvalue(), np.uint8), cv2.IMREAD_COLOR), 300), caption="선택된 사진")
 
+        elif sub_mode == "📷 실시간 카메라 촬영":
+            cam_file = st.camera_input("번호판을 촬영해 주세요")
+            if cam_file:
+                file_id = f"cam_{cam_file.size}"
+                if st.session_state.get('last_single_file') != file_id:
+                    with st.spinner("번호 추출 중..."):
+                        file_bytes = np.frombuffer(cam_file.read(), np.uint8)
+                        img_raw = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+                        img_ocr = resize_image(img_raw, 600)
+                        results = reader.readtext(img_ocr, detail=0)
+                        nums = re.findall(r'\d{4}', "".join(results))
+                        if nums:
+                            st.session_state.current_car = nums[-1]
+                            st.session_state["last_single_file"] = file_id
+                            st.success(f"인식 완료: {st.session_state.current_car}")
+
+        # --- 개별 확인 공통 결과 출력 ---
         if st.session_state.current_car:
-            st.markdown("---")
+            st.markdown("### 📋 판독 결과")
             car_num = st.session_state.current_car
             is_v, kt, d_type = check_violation(car_num)
             name, dept = get_car_info(car_num)
             
-            st.subheader(f"조회 결과: {car_num}")
-            if is_v: st.error(f"🚨 운행 위반 ({kt.month}월 {kt.day}일 {d_type}날)")
-            else: st.success(f"✅ 정상 운행 ({kt.month}월 {kt.day}일 {d_type}날)")
-            st.write(f"**소속:** {dept} | **성명:** {name}")
+            # 결과 표시 박스
+            res_col1, res_col2 = st.columns([1, 2])
+            with res_col1:
+                if is_v: st.error(f"🚨 운행 위반\n({d_type}날 위반)")
+                else: st.success(f"✅ 정상 운행\n({d_type}날 허용)")
+            
+            with res_col2:
+                st.write(f"**차량번호:** {car_num}")
+                st.write(f"**소속/성명:** {dept} / {name}")
 
             if st.button("📋 이 결과 저장하기", type="primary"):
                 st.session_state.check_history.append({
