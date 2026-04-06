@@ -146,37 +146,44 @@ with tab1:
                             st.session_state["last_single_file"] = file_id
                 st.image(resize_image(cv2.imdecode(np.frombuffer(up_file.getvalue(), np.uint8), cv2.IMREAD_COLOR), 300), caption="선택된 사진")
 
-        elif sub_mode == "📷 실시간 카메라 촬영":
+       elif sub_mode == "📷 실시간 카메라 촬영":
             st.info("💡 번호판을 카메라 중심에 비추고 1~2초간 멈춰주세요.")
 
-            # 최신 방식: 클래스 정의 없이 콜백 함수 사용
-            def video_frame_callback(frame):
-                img = frame.to_ndarray(format="bgr24")
-                
-                # 분석 속도를 위해 이미지 크기 축소
-                img_ocr = resize_image(img, 400)
-                results = reader.readtext(img_ocr, detail=0)
-                nums = re.findall(r'\d{4}', "".join(results))
+            # 클래스 방식을 사용하는 것이 세션 상태 관리와 안정성 면에서 유리합니다.
+            class VideoProcessor(VideoTransformerBase):
+                def __init__(self):
+                    self.last_num = None
 
-                if nums:
-                    # 전역 세션 상태에 직접 접근하는 대신 클래스 없이 처리할 때의 팁
-                    st.session_state.current_car = nums[-1]
-                
-                return frame
+                def transform(self, frame):
+                    img = frame.to_ndarray(format="bgr24")
+                    
+                    # 5프레임마다 한 번씩만 OCR을 수행하여 부하 감소 (선택 사항)
+                    img_ocr = resize_image(img, 400)
+                    results = reader.readtext(img_ocr, detail=0)
+                    nums = re.findall(r'\d{4}', "".join(results))
 
-            # webrtc_streamer 설정 변경
-            webrtc_streamer(
-                key="car-ocr",
-                video_frame_callback=video_frame_callback, 
+                    if nums:
+                        self.last_num = nums[-1]
+                    
+                    return img
+
+            # webrtc_streamer 실행
+            ctx = webrtc_streamer(
+                key="car-ocr-live",
+                video_processor_factory=VideoProcessor,
                 rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-               media_stream_constraints={
+                media_stream_constraints={
                     "video": {"facingMode": "environment"}, 
                     "audio": False
                 },
-                async_processing=True, # 비동기 처리 활성화
+                async_processing=True,
             )
 
-
+            # 카메라에 감지된 번호를 메인 화면 세션에 전달
+            if ctx.video_processor:
+                detected = ctx.video_processor.last_num
+                if detected:
+                    st.session_state.current_car = detected
             
         if st.session_state.current_car:
             car_num = st.session_state.current_car
