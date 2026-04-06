@@ -7,6 +7,7 @@ import re
 import datetime
 import base64
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+
 # =========================
 # 1. 설정 및 세션 초기화
 # =========================
@@ -22,7 +23,6 @@ if 'batch_visual_results' not in st.session_state:
     st.session_state.batch_visual_results = []
 if 'last_files' not in st.session_state:
     st.session_state.last_files = []
-# ✅ 과부하 방지용 개별 파일 체크 변수 추가
 if 'last_single_file' not in st.session_state:
     st.session_state.last_single_file = None
 
@@ -65,7 +65,6 @@ def load_db():
             try: return str(int(float(val))).zfill(4)
             except: return str(val).strip().zfill(4)
         df['car_number'] = df['car_number'].apply(format_car_num)
-        # 중복 제거 로직 (ValueError 방지)
         return df.drop_duplicates(subset=['car_number'], keep='first')
     except:
         st.error("car_db.csv 파일을 찾을 수 없습니다."); st.stop()
@@ -113,15 +112,11 @@ def resize_image(image, max_width=600):
 st.markdown('<p class="main-title">🚗 KHEPI 차량 2부제 점검 시스템</p>', unsafe_allow_html=True)
 tab1, tab2, tab3 = st.tabs(["🔍 차량 조회/인식", "📊 점검 누적 목록", "📖 이용 가이드"])
 
-# 상단에 추가 확인: from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
-
 with tab1:
-    # 1단계: 개별 확인 vs 일괄 확인 선택
     main_mode = st.radio("🏠 점검 방식을 선택하세요", ["🔍 개별 확인", "📑 일괄 확인 (여러 대)"], horizontal=True)
     st.markdown("---")
 
     if main_mode == "🔍 개별 확인":
-        # 2단계: 개별 확인 하단의 3가지 입력 모드
         sub_mode = st.radio(
             "입력 수단", 
             ["⌨️ 직접 입력", "📁 사진 파일 인식", "📷 실시간 카메라 촬영"], 
@@ -130,13 +125,11 @@ with tab1:
         
         st.write("") 
 
-        # --- 직접 입력 모드 ---
         if sub_mode == "⌨️ 직접 입력":
             input_num = st.text_input("차량 번호 뒤 4자리 입력", max_chars=4, placeholder="예: 1234")
             if st.button("번호 조회"):
                 st.session_state.current_car = input_num.strip().zfill(4)
 
-        # --- 사진 파일 인식 모드 ---
         elif sub_mode == "📁 사진 파일 인식":
             up_file = st.file_uploader("이미지 파일 업로드", type=["jpg", "png", "jpeg"], key="single_upload")
             if up_file:
@@ -153,21 +146,17 @@ with tab1:
                             st.session_state["last_single_file"] = file_id
                 st.image(resize_image(cv2.imdecode(np.frombuffer(up_file.getvalue(), np.uint8), cv2.IMREAD_COLOR), 300), caption="선택된 사진")
 
-        # --- 실시간 카메라 촬영 모드 (핵심 수정 부분) ---
         elif sub_mode == "📷 실시간 카메라 촬영":
             st.info("💡 번호판을 카메라 중심에 비추고 1~2초간 멈춰주세요.")
 
             class VideoProcessor(VideoTransformerBase):
                 def __init__(self):
                     self.last_detected_num = None
-
                 def transform(self, frame):
                     img = frame.to_ndarray(format="bgr24")
-                    # CPU 부하를 줄이기 위해 흑백 변환 후 OCR (선택 사항)
                     img_ocr = resize_image(img, 400)
                     results = reader.readtext(img_ocr, detail=0)
                     nums = re.findall(r'\d{4}', "".join(results))
-
                     if nums:
                         self.last_detected_num = nums[-1]
                     return img
@@ -179,13 +168,11 @@ with tab1:
                 media_stream_constraints={"video": True, "audio": False},
             )
 
-            # 실시간 감지 결과 출력부
             if ctx.video_processor:
                 detected = ctx.video_processor.last_detected_num
                 if detected:
                     st.session_state.current_car = detected
 
-        # --- [공통] 결과 표시 구역 (개별 확인 하단에 항상 노출) ---
         if st.session_state.current_car:
             car_num = st.session_state.current_car
             is_v, kt, d_type = check_violation(car_num)
@@ -208,11 +195,6 @@ with tab1:
                 })
                 st.session_state.current_car = None
                 st.rerun()
-
-    # --- 일괄 확인 모드 ---
-    else:
-        st.subheader("📑 일괄 처리 모드")
-        # 기존의 일괄 처리(텍스트/사진 여러장) 코드를 여기에 배치
 
     else:
         st.subheader("📑 일괄 처리 모드")
@@ -243,7 +225,6 @@ with tab1:
                 if current_file_ids != st.session_state.get('last_files', []):
                     st.session_state.batch_visual_results = []
                     st.session_state.last_files = current_file_ids
-                    
                     p_bar = st.progress(0)
                     status = st.empty()
                     for i, f in enumerate(multi_files):
@@ -251,18 +232,14 @@ with tab1:
                         file_bytes = np.frombuffer(f.read(), np.uint8)
                         img_raw = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
                         if img_raw is None: continue
-                        
                         img_ocr = resize_image(img_raw, 600)
                         ocr_res = reader.readtext(img_ocr, detail=0)
                         found = re.findall(r'\d{4}', "".join(ocr_res))
                         n = found[-1] if found else "실패"
-                        
                         is_v, kt, _ = check_violation(n)
                         name, dept = get_car_info(n)
-                        
                         h_r, w_r = img_raw.shape[:2]
                         thumb = cv2.resize(img_raw, (150, int(h_r * (150 / w_r))))
-                        
                         st.session_state.batch_visual_results.append({
                             "img_base64": opencv_to_base64(thumb), 
                             "점검시간": kt.strftime("%y-%m-%d %H:%M:%S"),
@@ -287,7 +264,6 @@ with tab1:
             st.write("### 📷 사진 분석 상세 결과")
             v_df = pd.DataFrame(st.session_state.batch_visual_results).drop(columns=['img_base64'])
             st.table(v_df)
-            
             with st.expander("🖼️ 분석 사진 썸네일 보기"):
                 cols = st.columns(5)
                 for idx, item in enumerate(st.session_state.batch_visual_results):
@@ -300,7 +276,6 @@ with tab1:
                                 <div class="result-text" style="color: {color};">{item['판정']}</div>
                             </div>
                         """, unsafe_allow_html=True)
-            
             if st.button("💾 위 사진 내역 모두 기록하기", type="primary", key="save_batch_v"):
                 for item in st.session_state.batch_visual_results:
                     if item['차량번호'] != "실패":
@@ -309,9 +284,6 @@ with tab1:
                 st.session_state.batch_visual_results = []
                 st.rerun()
 
-# =========================
-# 3. [탭 2] 및 [탭 3]
-# =========================
 with tab2:
     st.subheader("📊 오늘의 점검 내역")
     if st.session_state.check_history:
@@ -322,8 +294,7 @@ with tab2:
     else: st.write("기록이 없습니다.")
         
 with tab3:
-    st.info("💡 **KHEPI 차량 2부제 점검 가이드 Ver. 1.0**")
-    
+    st.info("💡 **KHEPI 차량 2부제 점검 가이드 Ver. 1.1**")
     st.markdown("""
     1. **시스템 목적**: 본 사이트는 차량 2부제 시행에 따라 KHEPI 직원 차량 및 위반 여부를 확인하기 위한 시스템입니다.
     <br><br>
@@ -336,12 +307,7 @@ with tab3:
         * **날짜가 [짝수]인 날**: 차량 번호 끝자리가 [홀수]면 위반입니다.
     <br><br>
     4. **사용 방법**:
-        * **조회**: 차량 번호 4자리를 직접 입력하거나 번호판 사진을 찍어 분석하세요.
-        * **차번호 일괄입력**: 쉼표나 엔터로 구분된 4자리 숫자들을 한꺼번에 판별합니다.
-        * **사진 일괄입력**: 여러 장의 사진을 올리면 썸네일과 함께 분석 결과를 보여줍니다.
-        * **기록**: 판별 결과가 나오면 하단의 **[기록하기]** 버튼을 눌러 목록에 추가하세요.
-    <br><br>
-    5. **데이터 관리**:
-        * 저장된 목록은 **[점검 누적 목록]** 탭에서 확인 및 CSV 파일로 다운로드할 수 있습니다.
-        * **주의**: 브라우저 창을 닫거나 새로고침(F5)을 하면 저장된 목록이 사라지니 미리 다운로드하세요.
+        * **개별 확인**: 직접 입력, 사진 업로드, 또는 **실시간 카메라**를 통해 판별합니다.
+        * **일괄 확인**: 여러 대의 번호를 텍스트로 입력하거나 사진 여러 장을 한 번에 분석합니다.
+        * **기록**: 판별 후 **[기록하기]** 버튼을 눌러야 목록에 최종 저장됩니다.
     """, unsafe_allow_html=True)
