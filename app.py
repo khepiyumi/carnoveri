@@ -167,18 +167,15 @@ with tab1:
             # webrtc_streamer 설정 변경
             webrtc_streamer(
                 key="car-ocr",
-                video_frame_callback=video_frame_callback, # 변경된 부분
+                video_frame_callback=video_frame_callback, 
                 rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-                media_stream_constraints={"video": True, "audio": False},
+                media_stream_constraints={"video": facingMode : "environment"}, "audio : False
+                },
                 async_processing=True, # 비동기 처리 활성화
             )
 
 
-            if ctx.video_processor:
-                detected = ctx.video_processor.last_detected_num
-                if detected:
-                    st.session_state.current_car = detected
-
+            
         if st.session_state.current_car:
             car_num = st.session_state.current_car
             is_v, kt, d_type = check_violation(car_num)
