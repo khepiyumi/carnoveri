@@ -146,8 +146,8 @@ with tab1:
                             st.session_state["last_single_file"] = file_id
                 st.image(resize_image(cv2.imdecode(np.frombuffer(up_file.getvalue(), np.uint8), cv2.IMREAD_COLOR), 300), caption="선택된 사진")
 
-       elif sub_mode == "📷 실시간 카메라 촬영":
-            st.info("💡 번호판을 카메라 중심에 비추고 1~2초간 멈춰주세요.")
+            elif sub_mode == "📷 실시간 카메라 촬영":
+                st.info("💡 번호판을 카메라 중심에 비추고 1~2초간 멈춰주세요.")
 
             # 클래스 방식을 사용하는 것이 세션 상태 관리와 안정성 면에서 유리합니다.
             class VideoProcessor(VideoTransformerBase):
