@@ -146,7 +146,7 @@ with tab1:
                             st.session_state["last_single_file"] = file_id
                 st.image(resize_image(cv2.imdecode(np.frombuffer(up_file.getvalue(), np.uint8), cv2.IMREAD_COLOR), 300), caption="선택된 사진")
 
-               elif sub_mode == "📷 실시간 카메라 촬영":
+        elif sub_mode == "📷 실시간 카메라 촬영":
             st.info("💡 번호판을 카메라 중심에 비추고 1~2초간 멈춰주세요.")
 
             # 최신 방식: 클래스 정의 없이 콜백 함수 사용
@@ -173,27 +173,6 @@ with tab1:
                 async_processing=True, # 비동기 처리 활성화
             )
 
-elif sub_mode == "📷 실시간 카메라 촬영":
-            st.info("💡 번호판을 카메라 중심에 비추고 1~2초간 멈춰주세요.")
-
-            class VideoProcessor(VideoTransformerBase):
-                def __init__(self):
-                    self.last_detected_num = None
-                def transform(self, frame):
-                    img = frame.to_ndarray(format="bgr24")
-                    img_ocr = resize_image(img, 400)
-                    results = reader.readtext(img_ocr, detail=0)
-                    nums = re.findall(r'\d{4}', "".join(results))
-                    if nums:
-                        self.last_detected_num = nums[-1]
-                    return img
-
-            ctx = webrtc_streamer(
-                key="car-ocr",
-                video_processor_factory=VideoProcessor,
-                rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-                media_stream_constraints={"video": True, "audio": False},
-            )
 
             if ctx.video_processor:
                 detected = ctx.video_processor.last_detected_num
