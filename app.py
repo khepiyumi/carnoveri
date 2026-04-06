@@ -169,7 +169,9 @@ with tab1:
                 key="car-ocr",
                 video_frame_callback=video_frame_callback, 
                 rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-                media_stream_constraints={"video": facingMode : "environment"}, "audio : False
+               media_stream_constraints={
+                    "video": {"facingMode": "environment"}, 
+                    "audio": False
                 },
                 async_processing=True, # 비동기 처리 활성화
             )
